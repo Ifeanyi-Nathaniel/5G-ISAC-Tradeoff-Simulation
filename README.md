@@ -135,4 +135,4 @@ Key references this work builds on:
 
 ## About
 
-This project is an independent research simulation completed as part of graduate application preparation and personal research development in 5G/6G wireless communications and ISAC systems.
+This project is an independent research simulation completed as manuscript meant for future publication, and personal research development in 5G/6G wireless communications and ISAC systems.
