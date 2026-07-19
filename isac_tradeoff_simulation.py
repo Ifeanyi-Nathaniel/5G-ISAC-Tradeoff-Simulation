@@ -401,8 +401,6 @@ for bar, val in zip(bars, oh_vals):
             ha='center', va='bottom', fontsize=10, fontweight='bold')
 ax.set_xlabel('DMRSAdditionalPosition', fontsize=12)
 ax.set_ylabel('Pilot Overhead (%)', fontsize=12)
-ax.set_title('Plot 1 — Pilot Overhead vs DMRSAdditionalPosition\n'
-             '(Resource cost driving the ISAC trade-off)', fontsize=11)
 ax.set_xticks(dp_vals)
 ax.set_ylim(0, max(oh_vals) * 1.25)
 ax.grid(axis='y', linestyle='--', alpha=0.5)
@@ -421,8 +419,6 @@ for x, y in zip(dp_vals, SE_vals):
                 ha='center', fontsize=9)
 ax.set_xlabel('DMRSAdditionalPosition', fontsize=12)
 ax.set_ylabel('Spectral Efficiency (bits/s/Hz)', fontsize=12)
-ax.set_title('Plot 2 — Spectral Efficiency vs DMRSAdditionalPosition\n'
-             '(Communication performance degrades as pilots increase)', fontsize=11)
 ax.set_xticks(dp_vals)
 ax.grid(linestyle='--', alpha=0.5)
 ax.legend(fontsize=10)
@@ -442,8 +438,6 @@ for x, y in zip(dp_vals, vmax_vals):
                 ha='center', fontsize=9)
 ax.set_xlabel('DMRSAdditionalPosition', fontsize=12)
 ax.set_ylabel('Max Unambiguous Velocity (m/s)', fontsize=12)
-ax.set_title('Plot 3 — Max Unambiguous Velocity vs DMRSAdditionalPosition\n'
-             '(Sensing capability ceiling improves with denser pilots)', fontsize=11)
 ax.set_xticks(dp_vals)
 ax.grid(linestyle='--', alpha=0.5)
 ax.legend(fontsize=10)
@@ -463,8 +457,6 @@ for x, y in zip(dp_vals, vres_vals):
                 ha='center', fontsize=9)
 ax.set_xlabel('DMRSAdditionalPosition', fontsize=12)
 ax.set_ylabel('Velocity Resolution (m/s)', fontsize=12)
-ax.set_title('Plot 4 — Velocity Resolution vs DMRSAdditionalPosition\n'
-             '(Finer resolution as observation time grows with more pilots)', fontsize=11)
 ax.set_xticks(dp_vals)
 ax.grid(linestyle='--', alpha=0.5)
 ax.legend(fontsize=10)
@@ -478,9 +470,6 @@ fig4.savefig('plot4_velocity_resolution.pdf', bbox_inches='tight')
 np.random.seed(42)   # reproducibility
 
 fig5, axes5 = plt.subplots(2, 2, figsize=(14, 10))
-fig5.suptitle('Plot 5 — Simulated Range-Doppler Maps\n'
-              f'(Target at R={R_target} m, v={v_target} m/s, SNR={SNR_RD_dB} dB)',
-              fontsize=13, fontweight='bold')
 
 for idx, dp in enumerate(DMRS_positions):
     ax = axes5[idx // 2][idx % 2]
@@ -499,7 +488,9 @@ for idx, dp in enumerate(DMRS_positions):
     im = ax.pcolormesh(V_ax, R_ax, Z, cmap='jet',
                        vmin=np.percentile(Z, 10), vmax=np.percentile(Z, 99.5),
                        shading='auto')
-    plt.colorbar(im, ax=ax, label='Magnitude (dB)')
+    cbar = plt.colorbar(im, ax=ax)
+    cbar.set_label('Magnitude (dB)', fontsize=12)
+    cbar.ax.tick_params(labelsize=11)
 
     # Mark true target position
     ax.axvline(v_target, color='white', linewidth=1.5, linestyle='--', alpha=0.8)
@@ -509,11 +500,12 @@ for idx, dp in enumerate(DMRS_positions):
 
     n_sense = DMRS_sym_per_slot[dp] * N_slots
     ax.set_title(f'DMRSAdditionalPosition = {dp}  '
-                 f'({DMRS_sym_per_slot[dp]} pilot sym/slot, {n_sense} total)',
-                 fontsize=10)
-    ax.set_xlabel('Velocity (m/s)', fontsize=10)
-    ax.set_ylabel('Range (m)', fontsize=10)
-    ax.legend(loc='upper right', fontsize=8, framealpha=0.7)
+                f'({DMRS_sym_per_slot[dp]} pilot sym/slot, {n_sense} total)',
+                fontsize=12)
+    ax.set_xlabel('Velocity (m/s)', fontsize=12)
+    ax.set_ylabel('Range (m)', fontsize=12)
+    ax.tick_params(axis='both', labelsize=11)
+    ax.legend(loc='upper right', fontsize=11, framealpha=0.7)
 
 fig5.tight_layout()
 fig5.savefig('plot5_range_doppler_maps.pdf', bbox_inches='tight')
@@ -522,53 +514,71 @@ fig5.savefig('plot5_range_doppler_maps.pdf', bbox_inches='tight')
 # PLOT 6 — HEADLINE TRADE-OFF SUMMARY (dual y-axis)
 # =============================================================================
 
-fig6, ax6a = plt.subplots(figsize=(8, 5))
+fig6, ax6a = plt.subplots(figsize=(10, 6))
 
-color_comm   = BLUE
-color_sense  = RED
+color_comm  = BLUE
+color_sense = RED
 
-# Left axis: Spectral Efficiency (communication)
+# --- Shaded zones (drawn first so lines appear on top) ---
+# Communication-favoured zone: position 0 only
+ax6a.axvspan(-0.4, 0.5, alpha=0.18, color=BLUE, zorder=0)
+
+# Transition zone: position 1
+ax6a.axvspan(0.5, 1.5, alpha=0.10, color='gray', zorder=0)
+ax6a.text(0.355, 0.97, 'Transition\nZone',
+          transform=ax6a.transAxes,
+          fontsize=9, color='gray', fontweight='bold',
+          va='top', ha='center',
+          bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                    edgecolor='gray', alpha=0.8))
+
+# Sensing-favoured zone: positions 2 and 3
+ax6a.axvspan(1.5, 3.4, alpha=0.18, color=RED, zorder=0)
+
+# --- Left axis: Spectral Efficiency (communication) ---
 line1, = ax6a.plot(dp_vals, SE_vals, 'o-', color=color_comm,
-                   linewidth=2.5, markersize=9, label='Spectral Efficiency (comm.)')
+                   linewidth=2.5, markersize=9,
+                   label='Spectral Efficiency (comm.)', zorder=5)
 ax6a.set_xlabel('DMRSAdditionalPosition', fontsize=12)
-ax6a.set_ylabel('Spectral Efficiency (bits/s/Hz)', fontsize=12, color=color_comm)
+ax6a.set_ylabel('Spectral Efficiency (bits/s/Hz)', fontsize=12,
+                color=color_comm)
 ax6a.tick_params(axis='y', labelcolor=color_comm)
 ax6a.set_xticks(dp_vals)
 
-# Right axis: Max Unambiguous Velocity (sensing)
+# --- Right axis: Max Unambiguous Velocity (sensing) ---
 ax6b = ax6a.twinx()
 line2, = ax6b.plot(dp_vals, vmax_vals, 's--', color=color_sense,
-                   linewidth=2.5, markersize=9, label='Max Unambiguous Velocity (sens.)')
-ax6b.set_ylabel('Max Unambiguous Velocity (m/s)', fontsize=12, color=color_sense)
+                   linewidth=2.5, markersize=9,
+                   label='Max Unambiguous Velocity (sens.)', zorder=5)
+ax6b.set_ylabel('Max Unambiguous Velocity (m/s)', fontsize=12,
+                color=color_sense)
 ax6b.tick_params(axis='y', labelcolor=color_sense)
 
-# Annotate communication values
-for x, y in zip(dp_vals, SE_vals):
+# --- Annotate communication values ---
+offsets_comm = [(-22, -18), (5, -18), (5, -18), (5, -18)]
+for i, (x, y) in enumerate(zip(dp_vals, SE_vals)):
+    dx, dy = offsets_comm[i]
     ax6a.annotate(f'{y:.3f}', (x, y),
-                  textcoords='offset points', xytext=(-18, 8),
-                  color=color_comm, fontsize=8.5)
+                  textcoords='offset points', xytext=(dx, dy),
+                  color=color_comm, fontsize=9, fontweight='bold')
 
-# Annotate sensing values
-for x, y in zip(dp_vals, vmax_vals):
+# --- Annotate sensing values ---
+offsets_sense = [(8, 8), (8, 8), (8, -18), (8, -18)]
+for i, (x, y) in enumerate(zip(dp_vals, vmax_vals)):
+    dx, dy = offsets_sense[i]
     ax6b.annotate(f'{y:.2f}', (x, y),
-                  textcoords='offset points', xytext=(6, 8),
-                  color=color_sense, fontsize=8.5)
+                  textcoords='offset points', xytext=(dx, dy),
+                  color=color_sense, fontsize=9, fontweight='bold')
 
-# Shaded regions to highlight trade-off zones
-ax6a.axvspan(-0.4, 0.5, alpha=0.07, color=BLUE,  label='Comm-favoured zone')
-ax6a.axvspan( 2.5, 3.4, alpha=0.07, color=RED,   label='Sensing-favoured zone')
 
-ax6a.set_title('Plot 6 — HEADLINE: ISAC Trade-off Summary\n'
-               'Communication (↓) vs Sensing Capability (↑) '
-               'as Pilot Density Increases',
-               fontsize=11, fontweight='bold')
 
-# Unified legend
+# --- Unified legend ---
 lines  = [line1, line2]
 labels = [l.get_label() for l in lines]
-ax6a.legend(lines, labels, loc='center right', fontsize=10, framealpha=0.9)
+ax6a.legend(lines, labels, loc='center right', fontsize=10,
+            framealpha=0.95, edgecolor='black')
 
-ax6a.grid(linestyle='--', alpha=0.4)
+ax6a.grid(linestyle='--', alpha=0.4, zorder=1)
 ax6a.set_xlim(-0.4, 3.4)
 fig6.tight_layout()
 fig6.savefig('plot6_tradeoff_summary.pdf', bbox_inches='tight')
@@ -589,9 +599,6 @@ for x, y in zip(dp_vals, sinr_vals):
                 ha='center', fontsize=9)
 ax.set_xlabel('DMRSAdditionalPosition', fontsize=12)
 ax.set_ylabel('Peak SINR on Range-Doppler Map (dB)', fontsize=12)
-ax.set_title('Plot 7 — Peak Range-Doppler SINR vs DMRSAdditionalPosition\n'
-             '(More pilot symbols → more coherent integration → higher SINR)',
-             fontsize=11)
 ax.set_xticks(dp_vals)
 ax.grid(linestyle='--', alpha=0.5)
 ax.legend(fontsize=10)
